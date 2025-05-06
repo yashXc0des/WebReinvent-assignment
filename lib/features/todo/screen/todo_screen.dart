@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:webreinvent_assignment/features/todo/screen/widgits/todo_card.dart';
-import '../../../core/theme/AppTheme.dart';
 import '../provider/theme_provider.dart';
 import '../provider/todo_provider.dart';
+import 'widgits/todo_card.dart';
 
 class TodoScreen extends ConsumerStatefulWidget {
   const TodoScreen({super.key});
@@ -13,100 +13,121 @@ class TodoScreen extends ConsumerStatefulWidget {
 }
 
 class _TodoScreenState extends ConsumerState<TodoScreen> {
-  final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
 
   @override
   void dispose() {
-    _taskController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
-  void _showAddTaskBottomSheet() {
+  void _showAddTaskSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+      builder: (context) {
+        final isDarkMode = ref.watch(themeModeProvider) == ThemeMode.dark;
+        final backgroundColor = isDarkMode
+            ? const Color(0xFF1C1C1E)
+            : Colors.white;
+        final textColor = isDarkMode
+            ? Colors.white
+            : const Color(0xFF1C1C1E);
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              spreadRadius: 5,
+          child: Container(
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Add New Task',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'New Task',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(CupertinoIcons.xmark_circle_fill,
+                        color: Colors.grey.withOpacity(0.5),
+                        size: 24,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _titleController.clear();
+                      },
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _taskController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Enter task details',
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? const Color(0xFF2C2C2E)
+                        : const Color(0xFFF2F2F7),
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                  ),
+                  child: TextField(
+                    controller: _titleController,
+                    autofocus: true,
+                    style: TextStyle(color: textColor),
+                    decoration: InputDecoration(
+                      hintText: 'Task name',
+                      hintStyle: TextStyle(
+                        color: textColor.withOpacity(0.6),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      border: InputBorder.none,
+                    ),
                   ),
                 ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: CupertinoButton(
+                    color: const Color(0xFF007AFF),
+                    borderRadius: BorderRadius.circular(12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     onPressed: () {
-                      Navigator.pop(context);
-                      _taskController.clear();
-                    },
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_taskController.text.trim().isNotEmpty) {
-                        ref.read(addTodoProvider)(_taskController.text.trim());
-                        _taskController.clear();
+                      if (_titleController.text.trim().isNotEmpty) {
+                        ref.read(addTodoProvider)(_titleController.text.trim());
+                        _titleController.clear();
                         Navigator.pop(context);
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    child: const Text(
+                      'Add Task',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
-                      elevation: 0,
                     ),
-                    child: const Text('Add Task'),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -114,94 +135,148 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   Widget build(BuildContext context) {
     final todosAsync = ref.watch(todoListProvider);
     final themeMode = ref.watch(themeModeProvider);
-    final isDark = themeMode == ThemeMode.dark;
+    final isDarkMode = themeMode == ThemeMode.dark;
+
+    final backgroundColor = isDarkMode
+        ? const Color(0xFF000000)
+        : const Color(0xFFF2F2F7);
+    final cardColor = isDarkMode
+        ? const Color(0xFF1C1C1E)
+        : Colors.white;
+    final textColor = isDarkMode
+        ? Colors.white
+        : const Color(0xFF000000);
+    final secondaryTextColor = isDarkMode
+        ? Colors.grey[400]
+        : Colors.grey[600];
 
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('To-Do List'),
+        backgroundColor: isDarkMode
+            ? const Color(0xFF1C1C1E)
+            : Colors.white,
+        elevation: 0,
+        title: Text(
+          'Tasks',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: textColor,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+            icon: Icon(
+              isDarkMode
+                  ? CupertinoIcons.sun_max_fill
+                  : CupertinoIcons.moon_fill,
+              color: isDarkMode
+                  ? Colors.white
+                  : Colors.black,
+              size: 22,
+            ),
             onPressed: () {
               ref.read(themeModeProvider.notifier).state =
-              isDark ? ThemeMode.light : ThemeMode.dark;
+              isDarkMode ? ThemeMode.light : ThemeMode.dark;
             },
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 12),
-              child: Text(
-                'Today\'s Tasks',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[700],
+        child: todosAsync.when(
+          data: (todos) => todos.isEmpty
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  CupertinoIcons.checkmark_circle,
+                  size: 64,
+                  color: secondaryTextColor,
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  "No Tasks",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Tap + to add a new task",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: secondaryTextColor,
+                  ),
+                ),
+              ],
+            ),
+          )
+              : ListView.builder(
+            itemCount: todos.length,
+            itemBuilder: (context, index) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TodoCard(todo: todos[index]),
               ),
             ),
-            Expanded(
-              child: todosAsync.when(
-                data: (todos) => todos.isEmpty
-                    ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.task_alt,
-                        size: 64,
-                        color: Colors.grey[300],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No tasks yet',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add a task using the + button',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-                    : ListView.builder(
-                  itemCount: todos.length,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: TodoCard(todo: todos[index]),
-                  ),
-                ),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-                error: (e, _) => Center(
-                  child: Text(
-                    'Error: $e',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
-              ),
+          ),
+          loading: () => const Center(
+            child: CupertinoActivityIndicator(),
+          ),
+          error: (e, _) => Center(
+            child: Text(
+              "Error: $e",
+              style: TextStyle(color: Colors.red[400]),
+            ),
+          ),
+        ),
+      ),
+      floatingActionButton: Container(
+        height: 60,
+        width: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF007AFF), Color(0xFF5AC8FA)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF007AFF).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTaskBottomSheet,
-        backgroundColor: Colors.blue,
-        elevation: 4,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: FloatingActionButton(
+          onPressed: _showAddTaskSheet,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          tooltip: 'Add Task',
+          child: const Icon(
+            CupertinoIcons.add,
+            size: 28,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
