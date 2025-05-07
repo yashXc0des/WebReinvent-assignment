@@ -140,9 +140,6 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     final backgroundColor = isDarkMode
         ? const Color(0xFF000000)
         : const Color(0xFFF2F2F7);
-    final cardColor = isDarkMode
-        ? const Color(0xFF1C1C1E)
-        : Colors.white;
     final textColor = isDarkMode
         ? Colors.white
         : const Color(0xFF000000);
@@ -221,20 +218,8 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
             itemCount: todos.length,
             itemBuilder: (context, index) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: TodoCard(todo: todos[index]),
-              ),
+              // Removed the Container wrapper to avoid conflicting with TodoCard's own styling
+              child: TodoCard(todo: todos[index]),
             ),
           ),
           loading: () => const Center(
