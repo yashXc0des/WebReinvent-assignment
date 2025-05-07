@@ -10,3 +10,5 @@ final todoListProvider = StreamProvider<List<TodoModel>>((ref) {
 
 final addTodoProvider = Provider((ref) => ref.watch(todoRepoProvider).addTodo);
 final toggleTodoProvider = Provider((ref) => ref.watch(todoRepoProvider).toggleTodoStatus);
+final deleteTodoProvider = Provider((ref) => ref.watch(todoRepoProvider).deleteTodo);
+

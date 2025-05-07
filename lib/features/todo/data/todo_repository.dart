@@ -16,4 +16,8 @@ class TodoRepository {
   Future<void> toggleTodoStatus(TodoModel todo) async {
     await _todoRef.doc(todo.id).update({'isCompleted': !todo.isCompleted});
   }
+  Future<void> deleteTodo(String id) async {
+    await _todoRef.doc(id).delete();
+  }
+
 }
